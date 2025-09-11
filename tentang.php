@@ -13,7 +13,7 @@
 <body>
 <header id="navbar">
   <div class="logo">
-    <img src="images/mindara.png" alt="Mindara Logo" class="logo-img" />
+    <img src="images/logo.png" alt="Mindara Logo" class="logo-img" />
   </div>
   <nav>
     <a href="index.php">Beranda</a>
@@ -21,7 +21,7 @@
     <a href="tentang.php">Tentang</a>
 
     <?php if (isset($_SESSION['user_name'])): ?>
-      <span style="margin-left: 20px;">Halo, <?= htmlspecialchars($_SESSION['user_name']); ?>!</span>
+      <a href="profile.php" class="user-greeting">Halo, <?= htmlspecialchars($_SESSION['user_name']); ?>!</a>
       <a href="logout.php" style="margin-left: 10px;">Logout</a>
     <?php else: ?>
       <a href="sign-in.php">Login</a>
@@ -29,15 +29,15 @@
   </nav>
 </header>
 
-<!-- SECTION 0: Tentang Mindara -->
+
 <section class="tentang-intro" >
-  <img src="images/mindara-logo.png" alt="Mindara Logo" class="tentang-logo">
+  <img src="images/logo.png" alt="Mindara Logo" class="tentang-logo">
   <div class="tentang-content">
-    <h1>Mindara: Ruang untuk Mendengarkan Diri Sendiri</h1>
+    <h1> <span style="color: #C1121F;">Mindara</span>: Ruang untuk Mendengarkan Diri Sendiri</h1>
     <p>Mindara adalah ruang digital yang hadir untuk membantumu memahami perasaanmu sendiri.</p>
     <p>Di dunia yang serba cepat, kami percaya setiap orang berhak untuk berhenti sejenak, mendengarkan isi hatinya, dan mulai menyembuhkan diri—tanpa stigma, tanpa tekanan.</p>
-    <p>Dengan fitur cek tingkat stres, journaling, dan edukasi ringan, kami ingin jadi teman perjalananmu menuju ketenangan dan keseimbangan mental.</p>
-    <p><strong>Karena kamu layak untuk merasa baik—lahir, batin, dan pikiran.</strong></p>
+    <p>Dengan fitur <span style="color: #456990;"> cek tingkat stres, journaling, dan edukasi ringan,</span> kami ingin jadi teman perjalananmu menuju ketenangan dan keseimbangan mental.</p>
+    <p style="color: #456990;"><strong>Karena kamu layak untuk merasa baik—lahir, batin, dan pikiran.</strong></p>
   </div>
 </section>
 
@@ -65,7 +65,7 @@
       <div class="mk-card">
         <div class="mk-icon">📈</div>
         <h4>Pola Deret Stres</h4>
-        <p>Dengan konsep deret, kita bisa melihat pola peningkatan beban dari waktu ke waktu dan membuat prediksi selama 7 hari ke depan. Jadi, kalkulus di sini bukan soal rumus panjang, tapi tentang menyederhanakan hidup menjadi angka yang bisa dianalisis.</p>
+        <p>Dengan konsep deret, kita bisa melihat pola peningkatan beban dari waktu ke waktu. Jadi, kalkulus di sini bukan soal rumus panjang, tapi tentang menyederhanakan hidup menjadi angka yang bisa dianalisis.</p>
       </div>
       <div class="mk-card">
         <div class="mk-icon">🧭</div>
@@ -77,7 +77,7 @@
 </section>
 
 <section class="tech-section">
-  <img src="images/mindara-logo.png" alt="Mindara Logo" class="tech-logo">
+  <img src="images/logo.png" alt="Mindara Logo" class="tech-logo">
   <h2>Teknologi yang Digunakan</h2>
 
   <div class="tech-slider-wrapper">
@@ -114,7 +114,7 @@
           <p>Analisis pola beban tugas & Gabungan faktor stres</p>
         </div>
 
-        <!-- ulang buat scroll terus -->
+
         <div class="tech-card card1">
           <img src="images/html.jpg" alt="HTML logo">
           <h3>HTML</h3>
@@ -151,43 +151,43 @@
 </section>
 
 
-<!-- SECTION: Tim Pengembang (grid biasa) -->
+
 <section class="tim-section">
   <h2>Tim Pengembang</h2>
   <div class="tim-grid">
     <div class="tim-card">
-      <img src="images/org.jpg" alt="qori">
+      <img src="images/qori.jpeg" alt="qori">
       <div class="tim-info">
         <h3>Siti Qori'ah Muhafidloh</h3>
         <p>24700611141</p>
       </div>
     </div>
     <div class="tim-card">
-      <img src="images/org.jpg" alt="qori">
+      <img src="images/muti.jpeg" alt="muti">
       <div class="tim-info">
         <h3>Muthia Febrahma Khoerunnisa</h3>
-        <p>247006111--</p>
+        <p>24700611130</p>
       </div>
     </div>
     <div class="tim-card">
-      <img src="images/org.jpg" alt="qori">
+      <img src="images/najmi.jpeg" alt="najmi">
       <div class="tim-info">
         <h3>Najmi Sabilla Almusfiroh</h3>
-        <p>247006111--</p>
+        <p>24700611125</p>
       </div>
     </div>
     <div class="tim-card">
-      <img src="images/org.jpg" alt="qori">
+      <img src="images/isma.jpeg" alt="isma">
       <div class="tim-info">
         <h3>Ismatul Ilmi</h3>
-        <p>247006111--</p>
+        <p>24700611137</p>
       </div>
     </div>
     <div class="tim-card">
-      <img src="images/org.jpg" alt="qori">
+      <img src="images/wardah.jpeg" alt="wardah">
       <div class="tim-info">
         <h3>Wardah Nurwafiq</h3>
-        <p>247006111--</p>
+        <p>24700611150</p>
       </div>
     </div>
   </div>
@@ -213,8 +213,8 @@
   <footer>
     <div class="brand-footer">
       <div>
-        <img src="images/mindara.png" 
-          width="70px" height="28px" alt>
+        <img src="images/logo.png" 
+          width="70px" height="40px" alt>
       </div>
     </div>
     <main>

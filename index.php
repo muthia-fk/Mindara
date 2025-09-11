@@ -2,7 +2,6 @@
   session_start();
 ?>
  
-<!-- https://chatgpt.com/c/67f72843-0058-8004-a142-9a44119f50a9 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +14,7 @@
 <body>
 <header id="navbar">
   <div class="logo">
-    <img src="images/mindara.png" alt="Mindara Logo" class="logo-img" />
+    <img src="images/logo.png" alt="Mindara Logo" class="logo-img" />
   </div>
   <nav>
     <a href="index.php">Beranda</a>
@@ -23,10 +22,10 @@
     <a href="tentang.php">Tentang</a>
 
     <?php if (isset($_SESSION['user_name'])): ?>
-      <span style="margin-left: 20px;">Halo, <?= htmlspecialchars($_SESSION['user_name']); ?>!</span>
+      <a href="profile.php" class="user-greeting">Halo, <?= htmlspecialchars($_SESSION['user_name']); ?>!</a>
       <a href="logout.php" style="margin-left: 10px;">Logout</a>
     <?php else: ?>
-      <a href="sign-in.php">Login</a>
+      <a href="sign-in.php" class="login-link">Login</a>
     <?php endif; ?>
   </nav>
 </header>
@@ -35,9 +34,15 @@
   <section class="hero">
     <div class="hero-content">
       <div class="hero-left">
-        <img src="images/mindara-logo.png" alt="Mindara Logo" class="logo">
+        <img src="images/logo.png" alt="Mindara Logo" class="logo">
         <p>“A calm space where anyone can understand their emotions, check their stress levels, and start healing—one breath at a time”</p>
-        <a href="analisis.php" class="mulai-button">Mulai Sekarang</a>
+        <div class="button-group">
+          <a href="analisis.php" class="mulai-button">Mulai Sekarang</a>
+          <?php if (isset($_SESSION['user_name'])): ?>
+            <a href="grafik.php" class="riwayat-button">Lihat Riwayatmu</a>
+          <?php endif; ?>
+        </div>
+
       </div>
       <div class="hero-right">
         <div class="circle-bg"></div>
@@ -77,15 +82,15 @@
     <div class="container">
       <h2 class="judul-section">Dengan menggabungkan data harian seperti jumlah tugas, durasi tidur, dan tekanan finansial, Mindara akan:</h2>
       <div class="grid-3">
-        <div class="card">
+        <div class="card1">
           <h3>Menganalisis Nilai Stres</h3>
           <p>Berdasarkan pola yang dihitung dari logika kalkulus.</p>
         </div>
-        <div class="card">
-          <h3>Prediksi 7 Hari</h3>
-          <p>Menampilkan grafik tingkat overthinking selama 7 hari ke depan.</p>
+        <div class="card2">
+          <h3>Data 7 Hari</h3>
+          <p>Menampilkan grafik tingkat overthinking selama 7 hari.</p>
         </div>
-        <div class="card">
+        <div class="card3">
           <h3>Insight Sederhana</h3>
           <p>Agar pengguna lebih sadar akan kondisi mentalnya.</p>
         </div>
@@ -118,7 +123,7 @@
     <div class="cta-container">
       <h2>Ayo Mulai Kenali Dirimu</h2>
       <p>Cek tingkat stresmu sekarang dan dapatkan insight untuk langkah selanjutnya!</p>
-      <a href="pertanyaan.php" class="cta-button">Mulai Sekarang</a>
+      <a href="analisis.php" class="cta-button">Mulai Sekarang</a>
     </div>
   </section>
 
@@ -133,8 +138,8 @@
   <footer>
     <div class="brand-footer">
       <div>
-        <img src="images/mindara.png" 
-          width="70px" height="28px" alt>
+      <img src="images/logo.png" 
+      width="70px" height="40px" alt>
       </div>
     </div>
     <main>
@@ -195,10 +200,10 @@
               if (!chartArea) return;
       
               const gradient = canvasCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-              // Solid color zones dari bawah (0%) ke atas (100%)
-              gradient.addColorStop(0, '#008000');  // Hijau solid
-              gradient.addColorStop(0.5, '#FFA500'); // Oranye solid
-              gradient.addColorStop(1, '#FF0000');  // Merah solid
+              
+              gradient.addColorStop(0, '#008000');  
+              gradient.addColorStop(0.5, '#FFA500'); 
+              gradient.addColorStop(1, '#FF0000');  
               return gradient;
             },
           },

@@ -1,86 +1,406 @@
-
 <?php
 session_start();
+require 'config.php';
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
-} 
+}
+
+$user_id = $_SESSION['user_id'];
+$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    if ($step === 1) {
+        $_SESSION['jawaban_stres'] = $_POST['jawaban'];
+    } elseif ($step === 2) {
+        $_SESSION['jawaban_akademik'] = $_POST['jawaban_akademik'];
+    } elseif ($step === 3) {
+        $_SESSION['jawaban_keuangan'] = $_POST['jawaban_keuangan'];
+        
+        $jawaban = array_merge(
+            $_SESSION['jawaban_stres'],
+            $_SESSION['jawaban_akademik'],
+            $_SESSION['jawaban_keuangan']
+        );
+
+        $stress_total = array_sum(array_slice($jawaban, 0, 10));
+        $akademik_total = array_sum(array_slice($jawaban, 10, 10));
+        $keuangan_total = array_sum(array_slice($jawaban, 20, 10));
+        $total = $stress_total + $akademik_total + $keuangan_total;
+
+        $max_input = 30; 
+        $max_magnitude = sqrt(3 * pow($max_input, 2)); 
+        $magnitude = sqrt(pow($stress_total, 2) + pow($akademik_total, 2) + pow($keuangan_total, 2));
+        $normalized_score = ($magnitude / $max_magnitude) * 100;
+
+        $normalized_score = round($normalized_score);
+
+        if ($normalized_score <= 33) {
+            $level = 'Rendah';
+            $level_class = 'level-low';
+            $recommendation = "Anda memiliki tingkat stress rendah. Jaga pola hidup sehat dan rutin relaksasi.";
+        } elseif ($normalized_score <= 66) {
+            $level = 'Sedang';
+            $level_class = 'level-medium';
+            $recommendation = "Anda memiliki tingkat stress sedang. Perhatikan manajemen waktu dan coba teknik relaksasi.";
+        } else {
+            $level = 'Tinggi';
+            $level_class = 'level-high';
+            $recommendation = "Anda memiliki tingkat stress tinggi. Disarankan untuk konsultasi dengan profesional atau praktikkan teknik relaksasi yang intensif.";
+        }
+
+        $query = "INSERT INTO hasil_tes (user_id, 
+                  q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, 
+                  q11, q12, q13, q14, q15, q16, q17, q18, q19, q20,
+                  q21, q22, q23, q24, q25, q26, q27, q28, q29, q30, 
+                  total, stress_total, akademik_total, keuangan_total, normalized_score, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+
+        $stmt = $conn->prepare($query);
+        
+        if ($stmt === false) {
+            die("Error preparing statement: " . $conn->error);
+        }
+
+        $params = array_merge([$user_id], $jawaban, [$total, $stress_total, $akademik_total, $keuangan_total, $normalized_score]);
+        
+        $types = str_repeat("i", count($params)); 
+        $stmt->bind_param($types, ...$params);
+
+        if ($stmt->execute()) {
+            header("Location: grafik.php");
+            exit;
+        } else {
+            die("Error saving data: " . $stmt->error);
+        }
+    }
+
+    if ($step < 3) {
+        header("Location: analisis.php?step=" . ($step + 1));
+        exit;
+    }
+}
 ?>
+
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Analisis</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisis Stress Berdasarkan Vektor 3D</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  body {
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 20px;
+  }
+  
+  h1 {
+    color: #4a6baf;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+  }
+  
+  h2 {
+    color: #4a6baf;
+    margin-bottom: 20px;
+    font-size: 22px;
+    text-align: center;
+  }
+  
+  h3 {
+    color: #555;
+    margin: 20px 0 15px;
+    font-size: 18px;
+  }
+  
+  .progress-container {
+    width: 100%;
+    background-color: #e0e5ec;
+    border-radius: 10px;
+    margin: 20px 0;
+    height: 10px;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(to right, #4a6baf, #6a8fd8);
+    transition: width 0.3s ease;
+  }
+  
+  .question {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .question:last-child {
+    border-bottom: none;
+  }
+  
+  .question-text {
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #444;
+  }
+  
+  .options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  
+  @media (max-width: 768px) {
+    .options {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .option {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .option:hover {
+    background-color: #e9ecef;
+  }
+  
+  .option input {
+    margin-right: 10px;
+  }
+  
+  .btn-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+  }
+  
+  .btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-next {
+    background: linear-gradient(to right, #4a6baf, #6a8fd8);
+    color: white;
+    margin-left: auto;
+  }
+  
+  .btn-next:hover {
+    background: linear-gradient(to right, #3a5a9f, #5a7fc8);
+  }
+  
+  .btn-prev {
+    background-color: #e9ecef;
+    color: #555;
+  }
+  
+  .btn-prev:hover {
+    background-color: #dee2e6;
+  }
+  
+  .step-indicator {
+    text-align: center;
+    color: #6c757d;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+</style>
 </head>
 <body>
-<header id="navbar">
-  <div class="logo">
-    <img src="images/mindara.png" alt="Mindara Logo" class="logo-img" />
-  </div>
-  <nav>
-    <a href="index.php">Beranda</a>
-    <a href="analisis.php">Analisis</a>
-    <a href="tentang.php">Tentang</a>
-
-    <?php if (isset($_SESSION['user_name'])): ?>
-      <span style="margin-left: 20px;">Halo, <?= htmlspecialchars($_SESSION['user_name']); ?>!</span>
-      <a href="logout.php" style="margin-left: 10px;">Logout</a>
-    <?php else: ?>
-      <a href="sign-in.php">Login</a>
-    <?php endif; ?>
-  </nav>
-</header>
-
-<div class="mindara-wrapper">
-<form action="hasil.php" method="POST" class="mindara-container">
-  <h1 class="mindara-heading">Tes Tingkat Stres</h1>
-
-  <!-- Soal 1 -->
-  <div class="mindara-question">
-    <label class="mindara-label">1. Saya merasa tegang atau tertekan:</label>
-    <div class="mindara-options">
-      <label class="mindara-option-label"><input type="radio" name="jawaban[0]" value="0" required> Tidak Pernah</label>
-      <label class="mindara-option-label"><input type="radio" name="jawaban[0]" value="1"> Kadang-kadang</label>
-      <label class="mindara-option-label"><input type="radio" name="jawaban[0]" value="2"> Sering</label>
-      <label class="mindara-option-label"><input type="radio" name="jawaban[0]" value="3"> Sangat Sering</label>
+<div class="container">
+  <div class="card">
+    <h1>Analisis Stress</h1>
+    
+    <div class="progress-container">
+      <div class="progress-bar" style="width: <?= ($step/3)*100 ?>%"></div>
     </div>
-  </div>
-
-  <!-- Soal 2-10 -->
-  <?php
-    $pertanyaan = [
-      "2. Saya merasa kesulitan untuk rileks.",
-      "3. Saya cemas tanpa alasan yang jelas.",
-      "4. Saya merasa mudah tersinggung.",
-      "5. Saya merasa kelelahan secara emosional.",
-      "6. Saya sulit tidur karena pikiran terus berjalan.",
-      "7. Saya merasa kewalahan oleh tanggung jawab.",
-      "8. Saya kehilangan minat dalam hal-hal yang biasanya saya nikmati.",
-      "9. Saya merasa tidak berdaya atau putus asa.",
-      "10. Saya mengalami gejala fisik seperti sakit kepala atau jantung berdebar karena stres."
-    ];
-    for ($i = 0; $i < count($pertanyaan); $i++): ?>
-      <div class="mindara-question">
-        <label class="mindara-label"><?= $pertanyaan[$i] ?></label>
-        <div class="mindara-options">
-          <label class="mindara-option-label"><input type="radio" name="jawaban[<?= $i+1 ?>]" value="0" required> Tidak Pernah</label>
-          <label class="mindara-option-label"><input type="radio" name="jawaban[<?= $i+1 ?>]" value="1"> Kadang-kadang</label>
-          <label class="mindara-option-label"><input type="radio" name="jawaban[<?= $i+1 ?>]" value="2"> Sering</label>
-          <label class="mindara-option-label"><input type="radio" name="jawaban[<?= $i+1 ?>]" value="3"> Sangat Sering</label>
-        </div>
+    
+    <div class="step-indicator">
+      Langkah <?= $step ?> dari 3 - 
+      <?php 
+        if($step == 1) echo "Stres Umum";
+        elseif($step == 2) echo "Stres Akademik";
+        else echo "Stres Keuangan";
+      ?>
+    </div>
+    
+    <?php if ($step === 1): ?>
+    <form method="POST" action="">
+      <h2>Pertanyaan Stres Umum</h2>
+      
+      <?php
+      $stress_questions = [
+        "Saya merasa tegang atau tertekan",
+        "Saya kesulitan untuk rileks",
+        "Saya cemas tanpa alasan jelas",
+        "Saya mudah tersinggung",
+        "Saya merasa kelelahan emosional",
+        "Saya sulit tidur karena banyak pikiran",
+        "Saya kewalahan dengan tanggung jawab",
+        "Saya kehilangan minat pada hal yang biasa dinikmati",
+        "Saya merasa tidak berdaya",
+        "Saya mengalami gejala fisik (sakit kepala, jantung berdebar)"
+      ];
+      
+      foreach ($stress_questions as $i => $question) {
+        echo '<div class="question">';
+        echo '<div class="question-text">'.($i+1).'. '.$question.'</div>';
+        echo '<div class="options">';
+        
+        $options = [
+          ["value" => 0, "label" => "Tidak Pernah"],
+          ["value" => 1, "label" => "Kadang-kadang"],
+          ["value" => 2, "label" => "Sering"],
+          ["value" => 3, "label" => "Sangat Sering"]
+        ];
+        
+        foreach ($options as $option) {
+          echo '<label class="option">';
+          echo '<input type="radio" name="jawaban['.$i.']" value="'.$option['value'].'" required>';
+          echo $option['label'];
+          echo '</label>';
+        }
+        
+        echo '</div></div>';
+      }
+      ?>
+      
+      <div class="btn-container">
+        <button type="submit" class="btn btn-next">Lanjut ke Stres Akademik →</button>
       </div>
-  <?php endfor; ?>
-
-  <hr class="mindara-hr">
-  <button class="mindara-submit-btn" type="submit">Kirim</button>
-</form>
-
+    </form>
+    
+    <?php elseif ($step === 2): ?>
+    <form method="POST" action="">
+      <h2>Pertanyaan Stres Akademik</h2>
+      
+      <?php
+      $akademik_questions = [
+        "Saya merasa kewalahan dengan jumlah tugas",
+        "Saya khawatir tidak bisa memenuhi deadline",
+        "Saya merasa nilai saya tidak memuaskan",
+        "Saya kesulitan memahami materi kuliah",
+        "Saya merasa tidak siap untuk ujian",
+        "Saya sering begadang untuk menyelesaikan tugas",
+        "Saya merasa dosen/teman lebih pintar dari saya",
+        "Saya khawatir tentang masa depan karir saya",
+        "Saya merasa tekanan untuk berprestasi",
+        "Saya kesulitan menyeimbangkan akademik dan kehidupan pribadi"
+      ];
+      
+      foreach ($akademik_questions as $i => $question) {
+        echo '<div class="question">';
+        echo '<div class="question-text">'.($i+1).'. '.$question.'</div>';
+        echo '<div class="options">';
+        
+        $options = [
+          ["value" => 0, "label" => "Tidak Pernah"],
+          ["value" => 1, "label" => "Kadang-kadang"],
+          ["value" => 2, "label" => "Sering"],
+          ["value" => 3, "label" => "Sangat Sering"]
+        ];
+        
+        foreach ($options as $option) {
+          echo '<label class="option">';
+          echo '<input type="radio" name="jawaban_akademik['.$i.']" value="'.$option['value'].'" required>';
+          echo $option['label'];
+          echo '</label>';
+        }
+        
+        echo '</div></div>';
+      }
+      ?>
+      
+      <div class="btn-container">
+        <a href="analisis.php?step=1" class="btn btn-prev">← Kembali</a>
+        <button type="submit" class="btn btn-next">Lanjut ke Stres Keuangan →</button>
+      </div>
+    </form>
+    
+    <?php elseif ($step === 3): ?>
+    <form method="POST" action="">
+      <h2>Pertanyaan Stres Keuangan</h2>
+      
+      <?php
+      $keuangan_questions = [
+        "Saya khawatir tentang biaya kuliah",
+        "Saya kesulitan memenuhi kebutuhan sehari-hari",
+        "Saya merasa terbebani dengan hutang",
+        "Saya tidak bisa membeli buku/bahan kuliah yang diperlukan",
+        "Saya khawatir tidak bisa membayar uang kuliah bulan depan",
+        "Saya merasa tidak memiliki cukup uang untuk bersosialisasi",
+        "Saya merasa tekanan untuk bekerja sambil kuliah",
+        "Saya khawatir tentang masa depan finansial saya",
+        "Saya merasa malu dengan kondisi keuangan saya",
+        "Saya kesulitan mengelola keuangan pribadi"
+      ];
+      
+      foreach ($keuangan_questions as $i => $question) {
+        echo '<div class="question">';
+        echo '<div class="question-text">'.($i+1).'. '.$question.'</div>';
+        echo '<div class="options">';
+        
+        $options = [
+          ["value" => 0, "label" => "Tidak Pernah"],
+          ["value" => 1, "label" => "Kadang-kadang"],
+          ["value" => 2, "label" => "Sering"],
+          ["value" => 3, "label" => "Sangat Sering"]
+        ];
+        
+        foreach ($options as $option) {
+          echo '<label class="option">';
+          echo '<input type="radio" name="jawaban_keuangan['.$i.']" value="'.$option['value'].'" required>';
+          echo $option['label'];
+          echo '</label>';
+        }
+        
+        echo '</div></div>';
+      }
+      ?>
+      
+      <div class="btn-container">
+        <a href="analisis.php?step=2" class="btn btn-prev">← Kembali</a>
+        <button type="submit" class="btn btn-next">Lihat Hasil Tes</button>
+      </div>
+    </form>
+    <?php endif; ?>
+  </div>
 </div>
-
-<script src="js/script.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
